@@ -4,3 +4,7 @@ Homestead.json
 Homestead.yaml
 .env
 .phpunit.result.cache
+node_modules
+
+/public/css/app.css
+/public/js/main.js

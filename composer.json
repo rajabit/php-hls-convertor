@@ -1,12 +1,19 @@
 {
     "name": "laravel/lumen",
     "description": "The Laravel Lumen Framework.",
-    "keywords": ["framework", "laravel", "lumen"],
+    "keywords": [
+        "framework",
+        "laravel",
+        "lumen"
+    ],
     "license": "MIT",
     "type": "project",
     "require": {
         "php": "^8.0",
-        "laravel/lumen-framework": "^9.0"
+        "illuminate/redis": "^9.17",
+        "laravel/lumen-framework": "^9.0",
+        "league/flysystem": "^3.0",
+        "mahdiidea/php-ffmpeg-video-streaming": "^2.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
@@ -14,6 +21,9 @@
         "phpunit/phpunit": "^9.5.10"
     },
     "autoload": {
+        "files": [
+            "app/Helpers/MasterFunctionsHelper.php"
+        ],
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
