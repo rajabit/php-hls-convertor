@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
+use App\Jobs\ConvertJob;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Cache;
@@ -69,13 +70,15 @@ class ConverterController extends Controller
             'audios.*.language.title' => 'The Title must not be greater than 64 characters.',
         ]);
 
-        if (Cache::store('redis')->get('status', 'inactive') == 'active') {
+        $status = Cache::store('redis')->get('status');
+        if (!empty($status)) {
             return response()->json([
-                'video' => 'converter currently in use'
+                'video' => 'converter currently in use',
+                'status' => $status
             ], 422);
         }
 
-        Cache::store('redis')->put('status', 'active', Carbon::now()->addHour());
+        $uniqueId = Str::uuid()->toString();
 
         $file = new Filesystem;
         $file->cleanDirectory(storage_path('app/tmp'));
@@ -92,7 +95,16 @@ class ConverterController extends Controller
             ];
         }
 
-        
+        return response()->json([
+            $uniqueId, $video, $audios, $request->all()
+        ]);
+
+        dispatch(new ConvertJob(
+            $uniqueId,
+            $video,
+            $audios,
+            $request->only("audio_quality", "audio_type", "hls_time", "qualities", "threads", "timeout")
+        ))->onConnection('redis');
 
         return response()->json($video);
     }

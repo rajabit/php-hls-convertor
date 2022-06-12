@@ -31,7 +31,11 @@
         />
 
         <div class="d-table w-100" v-if="object.audios_list">
-          <div class="d-table-row" v-for="(x, i) in object.audios_list" :key="i">
+          <div
+            class="d-table-row"
+            v-for="(x, i) in object.audios_list"
+            :key="i"
+          >
             <div class="d-table-cell pa-1">
               <v-icon>mdi-music</v-icon>
             </div>
@@ -172,7 +176,7 @@ export default {
       timeout: 14400,
       threads: 12,
       audios: [],
-      audios_list: []
+      audios_list: [],
     },
     options: {
       menu: ["expert", "easy"],
@@ -221,6 +225,10 @@ export default {
     },
   }),
 
+  created() {
+    this.$api.get("report").then(({ data }) => console.log(data));
+  },
+
   methods: {
     formatBytes(bytes, decimals = 2) {
       if (bytes === 0) return "0 Bytes";
@@ -236,7 +244,7 @@ export default {
     on_audios_change(e) {
       this.object.audios_list = [];
       for (let i = 0; i < this.object.audios.length; i++) {
-        console.log(this.object.audios[i])
+        console.log(this.object.audios[i]);
         this.object.audios_list.push({
           name: this.object.audios[i].name,
           language: "en",

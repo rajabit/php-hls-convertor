@@ -2,11 +2,13 @@ import Vue from "vue";
 import VueRouter from 'vue-router';
 
 import index from './pages/index';
+import report from './pages/report';
 
 let lang = ['fa', 'en'];
 
 let map = [
     {path: '*', name: 'home', component: index},
+    {path: 'report', name: 'report', component: report}
 ];
 
 let routes = [];
