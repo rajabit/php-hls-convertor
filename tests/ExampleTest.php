@@ -11,30 +11,16 @@ class ExampleTest extends TestCase
     {
         $queue = dispatch(new ConvertJob(
             "8e6b8681-6907-4ee1-8ec7-7f777f790662",
-            "tmp/dCcg4KwPxyxefL8nvFkvD3UTTcCgfnjYgfkdIZrs.mp4",
+            "tmp/BbKCGYV3c6btsFhRnySBUHIDOjQEsPo1nUu0ADyw.mp4",
             array([
                 "title" => "Maryam churche Spanish nar.mp4",
                 "language" => "en",
                 "default" => false,
-                "file" => "tmp/vQD4KGZ9IwVGNd4i8J5LKFKYVJYncoFTjMvj2fqt.mp4"
-            ], [
-                "title" => "Maryam churche Italy.mp4",
-                "language" => "en",
-                "default" => false,
-                "file" => "tmp/EN7p8LRfU9aw3UkYQa8tfmRaPaJHUpzCqbFNI2eA.mp4"
-            ], [
-                "title" => "Maryam churche German.mp4",
-                "language" => "en",
-                "default" => false,
-                "file" => "tmp/5qvmf61qG5cOyt4W9d97WRf9gPzubXvRQITcm2ei.mp4"
-            ], [
-                "title" => "Maryam churche English.mp4",
-                "language" => "en",
-                "default" => false,
-                "file" => "tmp/uzOt1YCwIDDXlEwQAsv3XpEQTymHPxrDPsL5qY5e.mp4"
+                "file" => "tmp/56G7smlnsTfwUbuR0QuegwlWxwOL4RNgC7TLkwYK.mp4"
             ]),
             array(
                 "audio_quality" => "90",
+                "audio_type" => "aac",
                 "hls_time" => "10",
                 "qualities" => [
                     ["bitrate" => "150", "width" => "426", "height" => "240"]

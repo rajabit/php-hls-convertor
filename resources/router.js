@@ -8,7 +8,7 @@ let lang = ['fa', 'en'];
 
 let map = [
     {path: '*', name: 'home', component: index},
-    {path: 'report', name: 'report', component: report}
+    {path: '/report', name: 'report', component: report}
 ];
 
 let routes = [];

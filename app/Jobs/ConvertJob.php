@@ -7,7 +7,6 @@ use Streaming\Format\X264;
 use Streaming\Representation;
 use Monolog\Handler\StreamHandler;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class ConvertJob extends Job
 {
@@ -28,7 +27,7 @@ class ConvertJob extends Job
       public function handle()
       {
             Cache::store('redis')->put('status', $this->uniqueId);
-            Cache::store('redis')->put("status-{$this->uniqueId}", "started");
+            Cache::store('redis')->put("status-{$this->uniqueId}", "Converting Video");
 
             $log = new Logger('FFmpeg_Streaming');
             $log->pushHandler(new StreamHandler(storage_path("logs/convert.log")));
@@ -48,8 +47,11 @@ class ConvertJob extends Job
                         ->setResize($item['width'], $item['height']);
             }
 
-            Storage::makeDirectory("export/$this->uniqueId");
             $export = storage_path("app/export/$this->uniqueId");
+
+            $oldmask = umask(0);
+            mkdir($export, 0777);
+            umask($oldmask);
 
             $video = $ffmpeg->open(storage_path("app/$this->video"));
 
@@ -67,24 +69,32 @@ class ConvertJob extends Job
                   ->setSegSubDirectory("videos")
                   ->save("$export/main.m3u8");
 
-            foreach ($this->audios as $audio) {
-                  $command = "'/usr/bin/ffmpeg' '-y' '-i' '{$audio['file']}' '-c:a' '{$this->config['audio_type']}' '-b:a' 
-                  '{$this->config['audio_quality']}k' '-vn' '-hls_time' '{$this->config['hls_time']}' '-hls_allow_cache' '1' '-hls_list_size' '0' 
-                   '-keyint_min' '25' '-g' '250' '-sc_threshold' '40' '-hls_segment_filename' '$export/audio/{$audio['language']}/main_%04d.ts' 
-                    '-strict' '-2' '$export/audio/{$audio['language']}/main.m3u8'";
-                  shell_exec($command);
-                  echo $command . "\n";
+            if (count($this->audios)) {
+                  $oldmask = umask(0);
+                  mkdir("$export/audio", 0777);
+                  umask($oldmask);
+                  foreach ($this->audios as $audio) {
+                        $oldmask = umask(0);
+                        mkdir("$export/audio/{$audio['language']}", 0777);
+                        umask($oldmask);
+                        Cache::store('redis')->put("status-{$this->uniqueId}", "Converting Audio ({$audio['language']})");
+                        $command = "'/usr/bin/ffmpeg' '-y' '-i' '" . storage_path("app/{$audio['file']}") . "' '-c:a' '{$this->config['audio_type']}' '-b:a' '{$this->config['audio_quality']}k' '-vn' '-hls_time' '{$this->config['hls_time']}' '-hls_allow_cache' '1' '-hls_list_size' '0' '-keyint_min' '25' '-g' '250' '-sc_threshold' '40' '-hls_segment_filename' '$export/audio/{$audio['language']}/main_%04d.ts' '-strict' '-2' '$export/audio/{$audio['language']}/main.m3u8'";
+                        shell_exec($command);
+                  }
             }
 
-            Cache::store('redis')->put('status', 'inactive');
+
+            Cache::store('redis')->put('status', null);
             Cache::store('redis')->put("status-{$this->uniqueId}", "success");
             Cache::store('redis')->put("status-{$this->uniqueId}-message", $export);
+            Cache::store('redis')->put("status-{$this->uniqueId}-percentage", null);
       }
 
       public function failed(\Throwable $exception)
       {
-            Cache::store('redis')->put('status', 'inactive');
+            Cache::store('redis')->put('status', null);
             Cache::store('redis')->put("status-{$this->uniqueId}", "failed");
             Cache::store('redis')->put("status-{$this->uniqueId}-message", $exception->getMessage());
+            Cache::store('redis')->put("status-{$this->uniqueId}-percentage", null);
       }
 }

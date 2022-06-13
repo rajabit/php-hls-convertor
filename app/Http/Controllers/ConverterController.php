@@ -95,10 +95,6 @@ class ConverterController extends Controller
             ];
         }
 
-        return response()->json([
-            $uniqueId, $video, $audios, $request->all()
-        ]);
-
         dispatch(new ConvertJob(
             $uniqueId,
             $video,
@@ -106,6 +102,9 @@ class ConverterController extends Controller
             $request->only("audio_quality", "audio_type", "hls_time", "qualities", "threads", "timeout")
         ))->onConnection('redis');
 
-        return response()->json($video);
+        return response()->json([
+            "status" => "active",
+            "uniqueId" => $uniqueId
+        ]);
     }
 }

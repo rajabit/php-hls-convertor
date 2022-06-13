@@ -228,7 +228,7 @@ export default {
   created() {
     this.$api.get("report").then(({ data }) => console.log(data));
   },
-
+  
   methods: {
     formatBytes(bytes, decimals = 2) {
       if (bytes === 0) return "0 Bytes";
@@ -244,7 +244,6 @@ export default {
     on_audios_change(e) {
       this.object.audios_list = [];
       for (let i = 0; i < this.object.audios.length; i++) {
-        console.log(this.object.audios[i]);
         this.object.audios_list.push({
           name: this.object.audios[i].name,
           language: "en",
@@ -254,6 +253,7 @@ export default {
     },
     start() {
       this.loading = true;
+      this.errors = [];
 
       let config = {
         headers: { "Content-Type": "multipart/form-data" },
@@ -297,7 +297,14 @@ export default {
       this.$api
         .post("converter", form, config)
         .then(({ data }) => {
-          console.log(data);
+          if (data.status == "active") {
+            this.$router.push({
+              path: "report",
+              query: { unique: data.uniqueId },
+            });
+          } else {
+            console.error("error", data);
+          }
         })
         .catch(({ response }) => {
           if (response.status == 422) {
