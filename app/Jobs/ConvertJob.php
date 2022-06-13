@@ -2,11 +2,15 @@
 
 namespace App\Jobs;
 
+use Illuminate\Filesystem\Filesystem;
 use Monolog\Logger;
 use Streaming\Format\X264;
 use Streaming\Representation;
 use Monolog\Handler\StreamHandler;
 use Illuminate\Support\Facades\Cache;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use ZipArchive;
 
 class ConvertJob extends Job
 {
@@ -69,28 +73,62 @@ class ConvertJob extends Job
                   ->setSegSubDirectory("videos")
                   ->save("$export/main.m3u8");
 
-            if (count($this->audios)) {
+            $audioCount = count($this->audios);
+            if ($audioCount) {
                   $oldmask = umask(0);
                   mkdir("$export/audio", 0777);
                   umask($oldmask);
-                  foreach ($this->audios as $audio) {
+                  Cache::store('redis')->put("status-{$this->uniqueId}-percentage", 0);
+
+                  foreach ($this->audios as $index => $audio) {
                         $oldmask = umask(0);
                         mkdir("$export/audio/{$audio['language']}", 0777);
                         umask($oldmask);
                         Cache::store('redis')->put("status-{$this->uniqueId}", "Converting Audio ({$audio['language']})");
                         $command = "'/usr/bin/ffmpeg' '-y' '-i' '" . storage_path("app/{$audio['file']}") . "' '-c:a' '{$this->config['audio_type']}' '-b:a' '{$this->config['audio_quality']}k' '-vn' '-hls_time' '{$this->config['hls_time']}' '-hls_allow_cache' '1' '-hls_list_size' '0' '-keyint_min' '25' '-g' '250' '-sc_threshold' '40' '-hls_segment_filename' '$export/audio/{$audio['language']}/main_%04d.ts' '-strict' '-2' '$export/audio/{$audio['language']}/main.m3u8'";
                         shell_exec($command);
+                        Cache::store('redis')->put("status-{$this->uniqueId}-percentage", ((($index + 1) / $audioCount) * 100));
                   }
 
                   Cache::store('redis')->put("status-{$this->uniqueId}", "Merging audios");
                   $this->merge_audios($this->audios, "$export/main.m3u8");
             }
 
+            Cache::store('redis')->put("status-{$this->uniqueId}", "Zipping");
+            Cache::store('redis')->put("status-{$this->uniqueId}-percentage", "indeterminate");
+
+            $rootPath = realpath($export);
+            $zipFile = storage_path("app/export/{$this->uniqueId}.zip");
+
+            $zip = new ZipArchive();
+            $zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($rootPath), RecursiveIteratorIterator::LEAVES_ONLY);
+
+            foreach ($files as $name => $file) {
+                  if (!$file->isDir()) {
+                        $filePath = $file->getRealPath();
+                        $relativePath = substr($filePath, strlen($rootPath) + 1);
+                        $zip->addFile($filePath, $relativePath);
+                  }
+            }
+
+            $zip->close();
+
+            Cache::store('redis')->put("status-{$this->uniqueId}", "Clearing temp");
+            Cache::store('redis')->put("status-{$this->uniqueId}-percentage", "indeterminate");
+
+            $fs =  new Filesystem;
+            $fs->deleteDirectory($export);
+
             Cache::store('redis')->put('status', null);
             Cache::store('redis')->put("status-{$this->uniqueId}", "success");
-            Cache::store('redis')->put("status-{$this->uniqueId}-message", $export);
+            Cache::store('redis')->put("status-{$this->uniqueId}-message", "Convert finished successfully.");
             Cache::store('redis')->put("status-{$this->uniqueId}-percentage", null);
+            Cache::store('redis')->put("status-{$this->uniqueId}-download", url("storage/export/{$this->uniqueId}.zip"));
       }
+
+
 
       public function merge_audios(array $audios, string $filePath)
       {

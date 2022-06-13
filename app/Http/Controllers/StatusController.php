@@ -17,6 +17,7 @@ class StatusController extends Controller
             return response()->json([
                   'status' => Cache::store('redis')->get("status-$id"),
                   'message' => Cache::store('redis')->get("status-$id-message"),
+                  'download' => Cache::store('redis')->get("status-$id-download"),
                   'percentage' => Cache::store('redis')->get("status-$id-percentage")
             ]);
       }

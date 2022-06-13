@@ -2,21 +2,38 @@
   <div class="d-flex justify-center align-center fill-height">
     <v-card min-width="550" v-if="status != null" elevation="2" outlined>
       <v-card-title class="overline" v-text="status.status" />
-      <v-divider />
-      <v-card-text>
+      <v-divider v-if="status.percentage != null" />
+      <v-card-text v-if="status.percentage != null">
         <v-progress-linear
           :value="status.percentage"
           color="primary"
           height="25"
           class="rounded"
+          :indeterminate="status.percentage === 'indeterminate'"
         >
-          <template v-slot:default="{ value }">
+          <template
+            v-if="status.percentage !== 'indeterminate'"
+            v-slot:default="{ value }"
+          >
             <strong>{{ Math.ceil(value) }}%</strong>
           </template>
         </v-progress-linear>
-        <v-divider v-if="status.status === 'failed'" />
-        <v-card-actions v-if="status.status === 'failed'" v-text="status.message" />
       </v-card-text>
+      <v-divider
+        v-if="status.status === 'failed' || status.status === 'success'"
+      />
+      <v-card-actions>
+        {{ status.message }}
+        <v-spacer />
+        <v-btn
+          v-if="status.status === 'success' && status.download != null"
+          :href="status.download"
+          color="success"
+        >
+          <v-icon>mdi-download</v-icon>
+          Download
+        </v-btn>
+      </v-card-actions>
     </v-card>
   </div>
 </template>
