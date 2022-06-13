@@ -13,3 +13,15 @@ On Mac
 
 Create storage link
 <pre>ln -s /home/mahdi/apps/php-hls-convertor/storage/app  /home/mahdi/apps/php-hls-convertor/public/storage</pre>
+
+Install composer packages
+<pre>composer install</pre>
+
+Install npm packages 
+<pre>npm install</pre>
+
+npm build dev
+<pre>npm run dev</pre>
+
+npm build production
+<pre>npm run prod</pre>
