@@ -14,6 +14,8 @@
             <strong>{{ Math.ceil(value) }}%</strong>
           </template>
         </v-progress-linear>
+        <v-divider v-if="status.status === 'failed'" />
+        <v-card-actions v-if="status.status === 'failed'" v-text="status.message" />
       </v-card-text>
     </v-card>
   </div>
@@ -26,7 +28,7 @@ export default {
   data: () => ({
     loading: false,
     status: null,
-    interval: null
+    interval: null,
   }),
 
   computed: {
@@ -45,6 +47,10 @@ export default {
     }, 1000);
   },
 
+  destroyed() {
+    clearInterval(this.interval);
+  },
+
   methods: {
     fetch() {
       this.loading = true;
@@ -54,7 +60,12 @@ export default {
             uniqueId: this.uniqueId,
           },
         })
-        .then(({ data }) => (this.status = data));
+        .then(({ data }) => {
+          this.status = data;
+          if (data.status === "success" || data.status === "failed") {
+            clearInterval(this.interval);
+          }
+        });
     },
   },
 };

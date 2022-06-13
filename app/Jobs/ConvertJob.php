@@ -81,13 +81,51 @@ class ConvertJob extends Job
                         $command = "'/usr/bin/ffmpeg' '-y' '-i' '" . storage_path("app/{$audio['file']}") . "' '-c:a' '{$this->config['audio_type']}' '-b:a' '{$this->config['audio_quality']}k' '-vn' '-hls_time' '{$this->config['hls_time']}' '-hls_allow_cache' '1' '-hls_list_size' '0' '-keyint_min' '25' '-g' '250' '-sc_threshold' '40' '-hls_segment_filename' '$export/audio/{$audio['language']}/main_%04d.ts' '-strict' '-2' '$export/audio/{$audio['language']}/main.m3u8'";
                         shell_exec($command);
                   }
-            }
 
+                  Cache::store('redis')->put("status-{$this->uniqueId}", "Merging audios");
+                  $this->merge_audios($this->audios, "$export/main.m3u8");
+            }
 
             Cache::store('redis')->put('status', null);
             Cache::store('redis')->put("status-{$this->uniqueId}", "success");
             Cache::store('redis')->put("status-{$this->uniqueId}-message", $export);
             Cache::store('redis')->put("status-{$this->uniqueId}-percentage", null);
+      }
+
+      public function merge_audios(array $audios, string $filePath)
+      {
+            $file = file_get_contents($filePath);
+
+            $search = "EXT-X-VERSION";
+            $lines = explode("#", $file);
+            foreach ($lines as $index => $line) {
+                  if (strpos($line, $search) === 0) {
+                        $index += 1;
+
+                        array_splice($lines, $index, 0, '');
+                        foreach ($audios as $audio) {
+                              array_splice($lines, $index, 0, 'EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",LANGUAGE="' . $audio['language'] . '",NAME="' . $audio['title'] . '",DEFAULT=YES,AUTOSELECT=YES,URI="audio/' . $audio['language'] . '/main.m3u8"');
+                        }
+                        array_splice($lines, $index, 0, '');
+
+                        break;
+                  }
+            }
+
+            foreach ($lines as $index => $line) {
+                  if (strpos($line, 'RESOLUTION')) {
+                        $lines[$index] = str_replace('RESOLUTION', 'AUDIO="aac",RESOLUTION', $line);
+                  }
+            }
+
+            $exp = "";
+            foreach ($lines as $line) {
+                  if (strlen($line) > 5) {
+                        $exp .= (PHP_EOL . "#$line");
+                  }
+            }
+
+            file_put_contents($filePath, $exp);
       }
 
       public function failed(\Throwable $exception)
