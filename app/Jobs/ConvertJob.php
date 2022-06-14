@@ -142,7 +142,7 @@ class ConvertJob extends Job
 
                         array_splice($lines, $index, 0, '');
                         foreach ($audios as $audio) {
-                              array_splice($lines, $index, 0, 'EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",LANGUAGE="' . $audio['language'] . '",NAME="' . $audio['title'] . '",DEFAULT=YES,AUTOSELECT=YES,URI="audio/' . $audio['language'] . '/main.m3u8"');
+                              array_splice($lines, $index, 0, 'EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",LANGUAGE="' . $audio['language'] . '",NAME="' . $audio['title'] . '",DEFAULT=YES,AUTOSELECT=NO,URI="audio/' . $audio['language'] . '/main.m3u8"');
                         }
                         array_splice($lines, $index, 0, '');
 
