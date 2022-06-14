@@ -9,4 +9,5 @@ $router->group(['prefix' => 'api'], function () use ($router) {
       });
 });
 
-$router->get('/{route:.*}/', 'IndexController@index');
+$router->get('/', 'IndexController@index');
+$router->get('/report', 'IndexController@index');
