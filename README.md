@@ -12,7 +12,7 @@ On Mac
 <pre>brew install ffmpeg</pre>
 
 Create storage link
-<pre>ln -s /home/mahdi/apps/php-hls-convertor/storage/app  /home/mahdi/apps/php-hls-convertor/public/storage</pre>
+<pre>ln -s php-hls-convertor/storage/app  php-hls-convertor/public/storage</pre>
 
 Install composer packages
 <pre>composer install</pre>
