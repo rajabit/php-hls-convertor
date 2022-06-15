@@ -12,6 +12,8 @@ class ConverterController extends Controller
 {
     public function store(Request $request)
     {
+        set_time_limit(600);
+
         $this->validate($request, [
             'video' => [
                 'required',
@@ -53,7 +55,7 @@ class ConverterController extends Controller
                 'required',
                 'numeric',
                 'min:1024',
-                'max:102400'
+                'max:10547200'
             ],
             'threads' => [
                 'required',
@@ -83,16 +85,19 @@ class ConverterController extends Controller
         $file = new Filesystem;
         $file->cleanDirectory(storage_path('app/tmp'));
 
-        $video = $request->file('video')->store('tmp');
         $audios = [];
+        $video = $request->file('video')->store('tmp');
+        $array = $request->input('audios');
 
-        foreach ($request->input('audios') as $index => $audio) {
-            $audios[] = [
-                'title' => $audio['title'],
-                'language' => $audio['language'],
-                'default' => $audio['default'] ?? false,
-                'file' => $request->file("audios_$index")->store('tmp')
-            ];
+        if (is_array($array)) {
+            foreach ($array as $index => $audio) {
+                $audios[] = [
+                    'title' => $audio['title'],
+                    'language' => $audio['language'],
+                    'default' => $audio['default'] ?? false,
+                    'file' => $request->file("audios_$index")->store('tmp')
+                ];
+            }
         }
 
         dispatch(new ConvertJob(

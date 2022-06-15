@@ -173,7 +173,7 @@ export default {
       hls_time: 10,
       audio_type: "aac",
       audio_quality: "90",
-      timeout: 14400,
+      timeout: 10547200,
       threads: 12,
       audios: [],
       audios_list: [],
@@ -228,7 +228,7 @@ export default {
   created() {
     this.$api.get("report").then(({ data }) => console.log(data));
   },
-  
+
   methods: {
     formatBytes(bytes, decimals = 2) {
       if (bytes === 0) return "0 Bytes";
@@ -256,6 +256,7 @@ export default {
       this.errors = [];
 
       let config = {
+        timeout: 600000,
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: function (progressEvent) {
           this.upload.loaded = progressEvent.loaded;
