@@ -25,3 +25,6 @@ npm build dev
 
 npm build production
 <pre>npm run prod</pre>
+
+to start converter job
+<pre>php artisan queue:work</pre>
